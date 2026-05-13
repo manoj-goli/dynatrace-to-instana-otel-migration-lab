@@ -1,0 +1,11 @@
+.env
+*.pem
+node_modules/
+.terraform/
+__pycache__/
+*.log
+.DS_Store
+implementation_plan.md
+implementation_plan_part2.md
+implementation_task.md
+
