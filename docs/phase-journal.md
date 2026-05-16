@@ -328,3 +328,22 @@ Key principle:
 Before creating any alert rule, first confirm the metric exists, is reliable, and has enough data to alert on.
 
 Small note: your MVP backlog defines the execution order and confirms Issue #5 is the next step after Dynatrace OTLP connectivity.
+---
+
+Date: May 15, 2026
+
+## Issue #5 Adjustment — Replacing VM CPU Rule
+
+During Dynatrace validation, I confirmed that the current MVP uses the OpenTelemetry demo’s in-container telemetry pipeline only. Since no Dynatrace OneAgent or OpenTelemetry hostmetrics receiver is installed on the VM, VM-level CPU saturation is not available as a reliable signal yet.
+
+Decision:
+Replace the VM CPU saturation rule in the MVP with an application-level rule based on already-verified Dynatrace service telemetry.
+
+Updated MVP rules:
+1. Frontend or checkout latency
+2. Frontend or payment error rate
+3. Frontend HTTP errors or throughput
+
+Reason:
+A reliable alert should only be created from telemetry that exists, updates consistently, and maps to real service behavior.
+---
