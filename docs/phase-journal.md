@@ -1,10 +1,9 @@
-
-
 # Phase Journal — Dynatrace to Instana Observability Migration Lab
 
 This journal tracks the execution progress of the MVP version of the lab.
 
 MVP scope:
+
 - GCP VM
 - Docker Compose
 - OpenTelemetry Astronomy Shop
@@ -96,12 +95,12 @@ Docker Compose v2 installed
 
 Created a GCP billing budget:
 
-* Budget: CAD 50
-* Alert thresholds:
+- Budget: CAD 50
+- Alert thresholds:
 
-  * 20% = CAD 10
-  * 40% = CAD 20
-  * 100% = CAD 50
+  - 20% = CAD 10
+  - 40% = CAD 20
+  - 100% = CAD 50
 
 Configured auto-shutdown:
 
@@ -111,10 +110,10 @@ Configured auto-shutdown:
 
 ### Key decisions
 
-* Use a custom VPC instead of default VPC for cleaner isolation.
-* Use SSH tunneling instead of opening port 8080 publicly.
-* Do not create broad service account permissions.
-* Do not use GKE for MVP.
+- Use a custom VPC instead of default VPC for cleaner isolation.
+- Use SSH tunneling instead of opening port 8080 publicly.
+- Do not create broad service account permissions.
+- Do not use GKE for MVP.
 
 ### Result
 
@@ -136,9 +135,9 @@ Cloned and started the OpenTelemetry Astronomy Shop demo on the GCP VM using Doc
 
 Verified:
 
-* Docker Compose stack started successfully.
-* Astronomy Shop frontend was accessible using SSH tunnel.
-* Browser access worked through:
+- Docker Compose stack started successfully.
+- Astronomy Shop frontend was accessible using SSH tunnel.
+- Browser access worked through:
 
 ```text
 http://localhost:8080
@@ -146,10 +145,10 @@ http://localhost:8080
 
 Validated basic user flow:
 
-* Browse products
-* Open product details
-* Add item to cart
-* Checkout flow
+- Browse products
+- Open product details
+- Add item to cart
+- Checkout flow
 
 ### Access method
 
@@ -164,9 +163,9 @@ gcloud compute ssh otel-mvp-vm `
 
 ### Key decisions
 
-* Do not start Dynatrace trial until the demo app is confirmed running.
-* Use the existing OpenTelemetry demo collector instead of installing a separate collector from scratch.
-* Treat this as the known-good baseline before adding external observability backends.
+- Do not start Dynatrace trial until the demo app is confirmed running.
+- Use the existing OpenTelemetry demo collector instead of installing a separate collector from scratch.
+- Treat this as the known-good baseline before adding external observability backends.
 
 ### Result
 
@@ -188,9 +187,9 @@ Started Dynatrace free trial and configured the OpenTelemetry Collector to expor
 
 Created Dynatrace access token with required ingest scopes:
 
-* `openTelemetryTrace.ingest`
-* `metrics.ingest`
-* `logs.ingest`
+- `openTelemetryTrace.ingest`
+- `metrics.ingest`
+- `logs.ingest`
 
 Added Dynatrace values to the VM-side `.env` file:
 
@@ -207,9 +206,9 @@ src/otel-collector/otelcol-config-extras.yml
 
 Added Dynatrace as an OTLP HTTP exporter for:
 
-* traces
-* metrics
-* logs
+- traces
+- metrics
+- logs
 
 ### Important blocker encountered
 
@@ -247,16 +246,16 @@ docker compose up -d --force-recreate otel-collector
 
 Dynatrace successfully showed:
 
-* Astronomy Shop services
-* Distributed traces
-* Request data
-* Service metrics such as response time, failure rate, throughput, and HTTP errors
+- Astronomy Shop services
+- Distributed traces
+- Request data
+- Service metrics such as response time, failure rate, throughput, and HTTP errors
 
 Evidence captured:
 
-* `evidence/dynatrace/services-visible.png`
-* `evidence/dynatrace/traces-flowing.png`
-* `evidence/dynatrace/metrics-explorer.png`
+- `evidence/dynatrace/services-visible.png`
+- `evidence/dynatrace/traces-flowing.png`
+- `evidence/dynatrace/metrics-explorer.png`
 
 ### Known warning
 
@@ -298,16 +297,16 @@ This is a very realistic DevOps/SRE issue because many production telemetry fail
 
 ## Current MVP Progress
 
-| Issue | Description                         | Status      |
-| ----- | ----------------------------------- | ----------- |
-| #1    | Repository scaffold                 | Complete    |
-| #2    | GCP VM and Docker baseline          | Complete    |
-| #3    | Astronomy Shop running              | Complete    |
-| #4    | Dynatrace OTLP export               | Complete    |
-| #5    | Create 3 Dynatrace rules and export | Next        |
-| #6    | Configure Instana OTLP export       | Not started |
-| #7    | Map and rebuild 3 rules in Instana  | Not started |
-| #8    | Validate with one failure scenario  | Not started |
+| Issue | Description | Status |
+|---|---|---|
+| #1 | Repository scaffold | Complete |
+| #2 | GCP VM and Docker baseline | Complete |
+| #3 | Astronomy Shop running | Complete |
+| #4 | Dynatrace OTLP export | Complete |
+| #5 | Create 3 Dynatrace rules and export | Next |
+| #6 | Configure Instana OTLP export | Not started |
+| #7 | Map and rebuild 3 rules in Instana | Not started |
+| #8 | Validate with one failure scenario | Not started |
 
 ---
 
@@ -328,6 +327,7 @@ Key principle:
 Before creating any alert rule, first confirm the metric exists, is reliable, and has enough data to alert on.
 
 Small note: your MVP backlog defines the execution order and confirms Issue #5 is the next step after Dynatrace OTLP connectivity.
+
 ---
 
 Date: May 15, 2026
@@ -337,13 +337,57 @@ Date: May 15, 2026
 During Dynatrace validation, I confirmed that the current MVP uses the OpenTelemetry demo’s in-container telemetry pipeline only. Since no Dynatrace OneAgent or OpenTelemetry hostmetrics receiver is installed on the VM, VM-level CPU saturation is not available as a reliable signal yet.
 
 Decision:
+
 Replace the VM CPU saturation rule in the MVP with an application-level rule based on already-verified Dynatrace service telemetry.
 
 Updated MVP rules:
+
 1. Frontend or checkout latency
 2. Frontend or payment error rate
 3. Frontend HTTP errors or throughput
 
 Reason:
+
 A reliable alert should only be created from telemetry that exists, updates consistently, and maps to real service behavior.
+
 ---
+
+### API Export Progress
+
+Exported the 3 MVP Dynatrace alerts using the Settings API.
+
+The alerts were found under:
+
+`builtin:davis.anomaly-detectors`
+
+Confirmed exported rules:
+
+- MVP - Frontend P95 Latency High
+- MVP - Frontend Failure Rate High
+- MVP - Frontend Throughput Drop
+
+All 3 were enabled.
+
+Key lesson:
+
+The new Dynatrace Anomaly Detection custom alerts are stored as Davis anomaly detectors, not classic metric events. This matters for migration because different alerting models require different export schemas.
+
+## Key Migration Lesson
+
+Exporting alerts is not just about downloading files.
+
+The real migration questions are:
+
+1. Which Dynatrace alerting model was used?
+2. Which API schema stores that model?
+3. Which export method was used?
+4. Does the exported structure preserve the query, threshold, event name, and scope?
+5. Can the exported rule be mapped cleanly to Instana?
+
+For this MVP, both Settings API and Monaco confirmed that the new Dynatrace custom alerts are stored as Davis anomaly detectors.
+
+### Export Artifact Notes
+
+Created `docs/export-artifacts.md` to document the purpose of each export file and folder.
+
+This was added because the Dynatrace Settings API and Monaco export the same alert rules in different JSON structures. The artifact guide helps distinguish API exports, Monaco config-as-code exports, screenshots, and rule inventory files.
