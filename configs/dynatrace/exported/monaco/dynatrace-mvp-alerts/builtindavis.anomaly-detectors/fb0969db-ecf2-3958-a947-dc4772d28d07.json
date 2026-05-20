@@ -1,0 +1,66 @@
+{
+  "enabled": true,
+  "title": "1 MVP - Frontend P95 Latency High",
+  "description": "",
+  "source": "Custom Alerts",
+  "executionSettings": {
+    "actor": "{{ .extractedIDs.id_0e886724_761d_403b_b1a9_c7057f790402 }}"
+  },
+  "analyzer": {
+    "name": "dt.statistics.ui.anomaly_detection.StaticThresholdAnomalyDetectionAnalyzer",
+    "input": [
+      {
+        "key": "query.expression",
+        "value": "timeseries p95_latency = percentile(dt.service.request.response_time, 95),\n  by: {dt.smartscape.service},\n  interval: 1m\n| fieldsAdd service_name = getNodeName(dt.smartscape.service)\n| filter service_name == \"frontend\""
+      },
+      {
+        "key": "alertOnMissingData",
+        "value": "false"
+      },
+      {
+        "key": "violatingSamples",
+        "value": "3"
+      },
+      {
+        "key": "threshold",
+        "value": "500000"
+      },
+      {
+        "key": "dealertingSamples",
+        "value": "5"
+      },
+      {
+        "key": "slidingWindow",
+        "value": "5"
+      },
+      {
+        "key": "alertCondition",
+        "value": "ABOVE"
+      }
+    ]
+  },
+  "eventTemplate": {
+    "properties": [
+      {
+        "key": "dt.source_entity",
+        "value": "{dims:dt.source_entity}"
+      },
+      {
+        "key": "event.type",
+        "value": "CUSTOM_ALERT"
+      },
+      {
+        "key": "event.description",
+        "value": "❗**Alert description:**\nAn anomaly was detected on {metricname}. Within the sliding window, {violating_samples} violation samples were detected that were {alert_condition} the threshold of {threshold}."
+      },
+      {
+        "key": "dt.smartscape_source.id",
+        "value": "{dims:dt.smartscape.service}"
+      },
+      {
+        "key": "event.name",
+        "value": "Alert when the frontend service becomes slow."
+      }
+    ]
+  }
+}

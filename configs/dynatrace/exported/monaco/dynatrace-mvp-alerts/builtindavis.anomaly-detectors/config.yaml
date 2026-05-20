@@ -1,0 +1,46 @@
+configs:
+- id: 2d5c1bad-f8a4-3f4c-b8e0-e1ec9dc4d37c
+  config:
+    parameters:
+      extractedIDs:
+        type: value
+        value:
+          id_0e886724_761d_403b_b1a9_c7057f790402: 0e886724-761d-403b-b1a9-c7057f790402
+    template: 2d5c1bad-f8a4-3f4c-b8e0-e1ec9dc4d37c.json
+    skip: false
+    originObjectId: vu9U3hXa3q0AAAABAB9idWlsdGluOmRhdmlzLmFub21hbHktZGV0ZWN0b3JzAAZ0ZW5hbnQABnRlbmFudAAkMWU1NzMwODctN2U0Yy0zNDRkLThkZWYtZjNjNjM2MDJmZDM1vu9U3hXa3q0
+  type:
+    settings:
+      schema: builtin:davis.anomaly-detectors
+      schemaVersion: 1.0.14
+      scope: environment
+- id: 88d8021b-de1d-3957-8f7d-b1a7dfd41bdf
+  config:
+    parameters:
+      extractedIDs:
+        type: value
+        value:
+          id_0e886724_761d_403b_b1a9_c7057f790402: 0e886724-761d-403b-b1a9-c7057f790402
+    template: 88d8021b-de1d-3957-8f7d-b1a7dfd41bdf.json
+    skip: false
+    originObjectId: vu9U3hXa3q0AAAABAB9idWlsdGluOmRhdmlzLmFub21hbHktZGV0ZWN0b3JzAAZ0ZW5hbnQABnRlbmFudAAkN2Q5OTEwOTYtNWYyZC0zOTkyLTg5ZDMtZjBmZDUxYjA2Yjgwvu9U3hXa3q0
+  type:
+    settings:
+      schema: builtin:davis.anomaly-detectors
+      schemaVersion: 1.0.14
+      scope: environment
+- id: fb0969db-ecf2-3958-a947-dc4772d28d07
+  config:
+    parameters:
+      extractedIDs:
+        type: value
+        value:
+          id_0e886724_761d_403b_b1a9_c7057f790402: 0e886724-761d-403b-b1a9-c7057f790402
+    template: fb0969db-ecf2-3958-a947-dc4772d28d07.json
+    skip: false
+    originObjectId: vu9U3hXa3q0AAAABAB9idWlsdGluOmRhdmlzLmFub21hbHktZGV0ZWN0b3JzAAZ0ZW5hbnQABnRlbmFudAAkMjNlYTE0MjYtNjQ0Yi0zZjdhLWFjZWYtNjY2Zjk4MTExMzIxvu9U3hXa3q0
+  type:
+    settings:
+      schema: builtin:davis.anomaly-detectors
+      schemaVersion: 1.0.14
+      scope: environment

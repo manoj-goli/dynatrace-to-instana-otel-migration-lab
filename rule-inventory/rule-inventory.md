@@ -18,3 +18,32 @@ This inventory captures the 3 Dynatrace MVP alerts created for the OpenTelemetry
 - `dt.smartscape.service` worked as the correct grouping dimension.
 - `dt.source_entity` returned no data for the failure-rate query, so it was not used for the MVP.
 - Throughput-drop validation was tested by stopping the `load-generator` container.
+
+## Dynatrace API Export Finding
+
+The 3 MVP alerts were successfully exported through the Dynatrace Settings API using the schema:
+
+`builtin:davis.anomaly-detectors`
+
+Exported alerts:
+
+- MVP - Frontend P95 Latency High
+- MVP - Frontend Failure Rate High
+- MVP - Frontend Throughput Drop
+
+All 3 alerts were enabled at export time.
+
+Important finding:
+
+These alerts were not stored as classic metric events. They were stored as Davis anomaly detector custom alerts. This means Dynatrace alert export depends heavily on the alerting model and schema used.
+
+For this MVP:
+
+| UI concept | API schema |
+|---|---|
+| Anomaly Detection custom alert | `builtin:davis.anomaly-detectors` |
+| Classic metric event | `builtin:anomaly-detection.metric-events` |
+
+Migration note:
+
+When migrating Dynatrace rules to Instana, the first step is not just “export alerts.” The first step is to identify which Dynatrace alerting model was used, because each model may be stored under a different API schema.

@@ -1,0 +1,222 @@
+{
+  "items": [
+    {
+      "objectId": "vu9U3hXa3q0AAAABAB9idWlsdGluOmRhdmlzLmFub21hbHktZGV0ZWN0b3JzAAZ0ZW5hbnQABnRlbmFudAAkMWU1NzMwODctN2U0Yy0zNDRkLThkZWYtZjNjNjM2MDJmZDM1vu9U3hXa3q0",
+      "updateToken": "vu9U3hXY3q0ATAAkMWU1NzMwODctN2U0Yy0zNDRkLThkZWYtZjNjNjM2MDJmZDM1ACRkNDM3YTA2MC01MTY4LTExZjEtODAwMS0wMTAwMDAwMDAwMDK-71TeFdjerQ",
+      "scope": "environment",
+      "schemaId": "builtin:davis.anomaly-detectors",
+      "value": {
+        "enabled": true,
+        "title": "3 MVP - Frontend Throughput Drop",
+        "description": "",
+        "source": "Custom Alerts",
+        "executionSettings": {
+          "actor": "0e886724-761d-403b-b1a9-c7057f790402"
+        },
+        "analyzer": {
+          "name": "dt.statistics.ui.anomaly_detection.StaticThresholdAnomalyDetectionAnalyzer",
+          "input": [
+            {
+              "key": "query.expression",
+              "value": "timeseries request_rate = sum(dt.service.request.count, rate: 1m),\n  by: {dt.smartscape.service},\n  interval: 1m\n| fieldsAdd service_name = getNodeName(dt.smartscape.service)\n| filter service_name == \"frontend\""
+            },
+            {
+              "key": "alertOnMissingData",
+              "value": "false"
+            },
+            {
+              "key": "violatingSamples",
+              "value": "3"
+            },
+            {
+              "key": "threshold",
+              "value": "291.384"
+            },
+            {
+              "key": "dealertingSamples",
+              "value": "5"
+            },
+            {
+              "key": "slidingWindow",
+              "value": "5"
+            },
+            {
+              "key": "alertCondition",
+              "value": "BELOW"
+            }
+          ]
+        },
+        "eventTemplate": {
+          "properties": [
+            {
+              "key": "dt.source_entity",
+              "value": "{dims:dt.source_entity}"
+            },
+            {
+              "key": "event.type",
+              "value": "CUSTOM_ALERT"
+            },
+            {
+              "key": "event.description",
+              "value": "❗**Alert description:**\nAn anomaly was detected on {metricname}. Within the sliding window, {violating_samples} violation samples were detected that were {alert_condition} the threshold of {threshold}."
+            },
+            {
+              "key": "dt.smartscape_source.id",
+              "value": "{dims:dt.smartscape.service}"
+            },
+            {
+              "key": "event.name",
+              "value": "Frontend request throughput dropped below expected level"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "objectId": "vu9U3hXa3q0AAAABAB9idWlsdGluOmRhdmlzLmFub21hbHktZGV0ZWN0b3JzAAZ0ZW5hbnQABnRlbmFudAAkMjNlYTE0MjYtNjQ0Yi0zZjdhLWFjZWYtNjY2Zjk4MTExMzIxvu9U3hXa3q0",
+      "updateToken": "vu9U3hXY3q0ATAAkMjNlYTE0MjYtNjQ0Yi0zZjdhLWFjZWYtNjY2Zjk4MTExMzIxACRjNGNjYTJiMC01MTY4LTExZjEtODAwMS0wMTAwMDAwMDAwMDO-71TeFdjerQ",
+      "scope": "environment",
+      "schemaId": "builtin:davis.anomaly-detectors",
+      "value": {
+        "enabled": true,
+        "title": "1 MVP - Frontend P95 Latency High",
+        "description": "",
+        "source": "Custom Alerts",
+        "executionSettings": {
+          "actor": "0e886724-761d-403b-b1a9-c7057f790402"
+        },
+        "analyzer": {
+          "name": "dt.statistics.ui.anomaly_detection.StaticThresholdAnomalyDetectionAnalyzer",
+          "input": [
+            {
+              "key": "query.expression",
+              "value": "timeseries p95_latency = percentile(dt.service.request.response_time, 95),\n  by: {dt.smartscape.service},\n  interval: 1m\n| fieldsAdd service_name = getNodeName(dt.smartscape.service)\n| filter service_name == \"frontend\""
+            },
+            {
+              "key": "alertOnMissingData",
+              "value": "false"
+            },
+            {
+              "key": "violatingSamples",
+              "value": "3"
+            },
+            {
+              "key": "threshold",
+              "value": "500000"
+            },
+            {
+              "key": "dealertingSamples",
+              "value": "5"
+            },
+            {
+              "key": "slidingWindow",
+              "value": "5"
+            },
+            {
+              "key": "alertCondition",
+              "value": "ABOVE"
+            }
+          ]
+        },
+        "eventTemplate": {
+          "properties": [
+            {
+              "key": "dt.source_entity",
+              "value": "{dims:dt.source_entity}"
+            },
+            {
+              "key": "event.type",
+              "value": "CUSTOM_ALERT"
+            },
+            {
+              "key": "event.description",
+              "value": "❗**Alert description:**\nAn anomaly was detected on {metricname}. Within the sliding window, {violating_samples} violation samples were detected that were {alert_condition} the threshold of {threshold}."
+            },
+            {
+              "key": "dt.smartscape_source.id",
+              "value": "{dims:dt.smartscape.service}"
+            },
+            {
+              "key": "event.name",
+              "value": "Alert when the frontend service becomes slow."
+            }
+          ]
+        }
+      }
+    },
+    {
+      "objectId": "vu9U3hXa3q0AAAABAB9idWlsdGluOmRhdmlzLmFub21hbHktZGV0ZWN0b3JzAAZ0ZW5hbnQABnRlbmFudAAkN2Q5OTEwOTYtNWYyZC0zOTkyLTg5ZDMtZjBmZDUxYjA2Yjgwvu9U3hXa3q0",
+      "updateToken": "vu9U3hXY3q0ATAAkN2Q5OTEwOTYtNWYyZC0zOTkyLTg5ZDMtZjBmZDUxYjA2YjgwACRjZTUyYWY1MC01MTY4LTExZjEtODAwMS0wMTAwMDAwMDAwMDO-71TeFdjerQ",
+      "scope": "environment",
+      "schemaId": "builtin:davis.anomaly-detectors",
+      "value": {
+        "enabled": true,
+        "title": "2 MVP - Frontend Failure Rate High",
+        "description": "",
+        "source": "Custom Alerts",
+        "executionSettings": {
+          "actor": "0e886724-761d-403b-b1a9-c7057f790402"
+        },
+        "analyzer": {
+          "name": "dt.statistics.ui.anomaly_detection.StaticThresholdAnomalyDetectionAnalyzer",
+          "input": [
+            {
+              "key": "query.expression",
+              "value": "timeseries {\n    total = sum(dt.service.request.count),\n    failures = sum(dt.service.request.failure_count, default: 0)\n  },\n  by: {dt.smartscape.service},\n  interval: 1m\n| fieldsAdd service_name = getNodeName(dt.smartscape.service)\n| filter service_name == \"frontend\"\n| fieldsAdd failure_rate = if(total[] > 0, 100 * failures[] / total[], else: 0)\n| fieldsRemove total, failures"
+            },
+            {
+              "key": "alertOnMissingData",
+              "value": "false"
+            },
+            {
+              "key": "violatingSamples",
+              "value": "3"
+            },
+            {
+              "key": "threshold",
+              "value": "5"
+            },
+            {
+              "key": "dealertingSamples",
+              "value": "5"
+            },
+            {
+              "key": "slidingWindow",
+              "value": "5"
+            },
+            {
+              "key": "alertCondition",
+              "value": "ABOVE"
+            }
+          ]
+        },
+        "eventTemplate": {
+          "properties": [
+            {
+              "key": "dt.source_entity",
+              "value": "{dims:dt.source_entity}"
+            },
+            {
+              "key": "event.type",
+              "value": "CUSTOM_ALERT"
+            },
+            {
+              "key": "event.description",
+              "value": "❗**Alert description:**\nAn anomaly was detected on {metricname}. Within the sliding window, {violating_samples} violation samples were detected that were {alert_condition} the threshold of {threshold}."
+            },
+            {
+              "key": "dt.smartscape_source.id",
+              "value": "{dims:dt.smartscape.service}"
+            },
+            {
+              "key": "event.name",
+              "value": "Frontend failure rate is above 5 percent\n"
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "totalCount": 3,
+  "pageSize": 100
+}

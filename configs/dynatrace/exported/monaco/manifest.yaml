@@ -1,0 +1,13 @@
+manifestVersion: "1.0"
+projects:
+- name: dynatrace-mvp-alerts
+environmentGroups:
+- name: default
+  environments:
+  - name: dynatrace-mvp-alerts
+    url:
+      value: https://kdb75523.live.dynatrace.com
+    auth:
+      token:
+        type: environment
+        name: DT_CONFIG_TOKEN

@@ -1,0 +1,15 @@
+{
+  "objectId": "vu9U3hXa3q0AAAABAB9idWlsdGluOmRhdmlzLmFub21hbHktZGV0ZWN0b3JzAAZ0ZW5hbnQABnRlbmFudAAkMWU1NzMwODctN2U0Yy0zNDRkLThkZWYtZjNjNjM2MDJmZDM1vu9U3hXa3q0",
+  "title": "3 MVP - Frontend Throughput Drop",
+  "enabled": true
+}
+{
+  "objectId": "vu9U3hXa3q0AAAABAB9idWlsdGluOmRhdmlzLmFub21hbHktZGV0ZWN0b3JzAAZ0ZW5hbnQABnRlbmFudAAkMjNlYTE0MjYtNjQ0Yi0zZjdhLWFjZWYtNjY2Zjk4MTExMzIxvu9U3hXa3q0",
+  "title": "1 MVP - Frontend P95 Latency High",
+  "enabled": true
+}
+{
+  "objectId": "vu9U3hXa3q0AAAABAB9idWlsdGluOmRhdmlzLmFub21hbHktZGV0ZWN0b3JzAAZ0ZW5hbnQABnRlbmFudAAkN2Q5OTEwOTYtNWYyZC0zOTkyLTg5ZDMtZjBmZDUxYjA2Yjgwvu9U3hXa3q0",
+  "title": "2 MVP - Frontend Failure Rate High",
+  "enabled": true
+}
