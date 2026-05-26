@@ -96,7 +96,7 @@ Location:
 | File | What it shows | Why it matters |
 |---|---|---|
 | `services-visible.png` | Astronomy Shop services visible in Dynatrace | Proves telemetry reached Dynatrace |
-| `traces-flowing.png` | Distributed traces visible | Proves trace ingest works |
+| `distributed-tracing.png` | Distributed traces visible | Proves trace ingest works |
 | `metrics-explorer.png` | Metrics/service graphs visible | Proves service-level metric visibility |
 | `rule-01-frontend-p95-latency-preview.png` | Latency alert preview | Proves Rule 1 query returns data |
 | `rule-02-frontend-failure-rate-preview.png` | Failure-rate alert preview | Proves Rule 2 query returns data |
@@ -131,3 +131,22 @@ The real migration questions are:
 5. Can the exported rule be mapped cleanly to Instana?
 
 For this MVP, both Settings API and Monaco confirmed that the new Dynatrace custom alerts are stored as Davis anomaly detectors.
+
+---
+
+## Instana Evidence (Issue #6)
+
+Location:
+
+`evidence/instana/`
+
+| File | What it shows | Why it matters |
+|---|---|---|
+| `services-visible.png` | Astronomy Shop services visible in Instana | Proves OTLP telemetry reached Instana |
+| `traces-flowing.png` | Distributed traces visible in Instana | Proves trace ingest works via dual-export |
+| `metrics-visible.png` | Service metrics visible in Instana | Proves metric ingest works |
+| `dynatrace-still-active.png` | Dynatrace still receiving telemetry after Instana is added | Proves dual-export did not regress the existing backend |
+| `collector-dual-export-logs.png` | Collector restart/log evidence with both exporters configured | Helps validate the dual-export collector startup |
+| `logs-attempt.png` | Logs view in Instana (if visible) | Best-effort log evidence |
+
+Note: These screenshots will be added after Issue #6 VM validation is complete.

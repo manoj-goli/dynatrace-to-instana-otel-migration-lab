@@ -308,3 +308,110 @@ scp      = copy files between machines
 7. Use full remote paths with gcloud scp.
 8. Save both raw exports and readable notes because migration work needs evidence.
 ```
+
+---
+
+## 15. Dual-export fan-out pattern (Issue #6)
+
+```text
+The OpenTelemetry Collector supports multiple exporters in a single pipeline.
+This means one collector can send the same traces, metrics, and logs to
+both Dynatrace and Instana simultaneously.
+```
+
+Key concept:
+
+```yaml
+service:
+  pipelines:
+    traces:
+      exporters: [otlp_grpc/jaeger, debug, spanmetrics, otlp_http/dynatrace, otlp_http/instana]
+```
+
+This is called a **fan-out** pattern. Each exporter operates independently — if one fails, the others continue.
+
+Learning:
+
+```text
+Fan-out is the simplest way to compare two observability platforms.
+No duplicate collectors, no proxy, no routing rules needed.
+The demo's extras config overlay makes this easy to toggle.
+```
+
+Important:
+
+```text
+Use the currently working Dynatrace collector config as the base.
+Do not replace it with a simplified config that removes the demo exporters.
+
+Preserve:
+  traces:  otlp_grpc/jaeger, debug, spanmetrics
+  metrics: otlp_http/prometheus, debug
+  logs:    opensearch, debug
+```
+
+---
+
+## 16. Instana OTLP authentication model
+
+```text
+Instana uses a custom HTTP header for OTLP authentication:
+  x-instana-key: <agent-key>
+
+Dynatrace uses a standard Authorization header:
+  Authorization: Api-Token <token>
+
+Each backend has its own auth model. Always check the vendor's
+OTLP ingestion docs for the correct header name and format.
+```
+
+---
+
+## 17. gRPC vs HTTP OTLP export
+
+```text
+The OTel Collector supports two OTLP exporter types:
+  otlp     = gRPC (typically port 4317)
+  otlp_http = HTTP (typically port 4318) in this demo config
+
+Choose based on the backend's endpoint format.
+If the endpoint URL includes :4317, use otlp.
+If it includes :4318 or /v1/traces, use otlp_http.
+Using the wrong type causes connection errors.
+```
+
+---
+
+## 18. Environment variable scope reminder
+
+```text
+Adding a variable to the VM-side .env file is not enough.
+The Docker container must also receive it.
+
+The docker-compose.override.yml must include:
+  services:
+    otel-collector:
+      env_file:
+        - .env
+
+Without this, the collector sees unset environment variables
+and fails to start — even though the .env file exists on the VM.
+
+This was first learned in Issue #4 (Dynatrace) and applies
+equally to Issue #6 (Instana dual-export).
+```
+
+Validation command:
+
+```bash
+docker inspect otel-collector --format '{{range .Config.Env}}{{println .}}{{end}}' | grep -E 'DT_ENDPOINT|INSTANA_OTLP_ENDPOINT|INSTANA_AGENT_KEY'
+```
+
+Learning:
+
+```text
+Use docker inspect for environment validation.
+Do not rely on docker compose exec otel-collector env because the
+collector image may not include shell or env utilities.
+Do not commit command output if it exposes real endpoints or keys.
+```

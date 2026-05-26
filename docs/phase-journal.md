@@ -303,8 +303,8 @@ This is a very realistic DevOps/SRE issue because many production telemetry fail
 | #2 | GCP VM and Docker baseline | Complete |
 | #3 | Astronomy Shop running | Complete |
 | #4 | Dynatrace OTLP export | Complete |
-| #5 | Create 3 Dynatrace rules and export | Next |
-| #6 | Configure Instana OTLP export | Not started |
+| #5 | Create 3 Dynatrace rules and export | Complete |
+| #6 | Configure Instana OTLP export (dual-export) | Planned / In progress |
 | #7 | Map and rebuild 3 rules in Instana | Not started |
 | #8 | Validate with one failure scenario | Not started |
 
@@ -312,29 +312,27 @@ This is a very realistic DevOps/SRE issue because many production telemetry fail
 
 ## Next Step
 
-Proceed to Issue #5:
+Proceed with Issue #6 validation.
 
-Create 3 core Dynatrace rules:
+Issue #7 must not start until Issue #6 is validated:
 
-1. Checkout or frontend p95 latency
-2. Payment or frontend error rate
-3. VM CPU saturation, if host CPU metric is available
-
-If host CPU is not available through OTLP-only setup, replace the CPU rule temporarily with a throughput or HTTP error rule.
-
-Key principle:
-
-Before creating any alert rule, first confirm the metric exists, is reliable, and has enough data to alert on.
-
-Small note: your MVP backlog defines the execution order and confirms Issue #5 is the next step after Dynatrace OTLP connectivity.
+- Instana services are visible.
+- Instana traces are visible.
+- Instana metrics are visible.
+- Dynatrace still receives telemetry.
+- `evidence/instana/` screenshots are captured.
 
 ---
 
+## Issue #5 — Create 3 Dynatrace MVP Rules and Export
+
+Status: Complete
+
 Date: May 15, 2026
 
-## Issue #5 Adjustment — Replacing VM CPU Rule
+### VM CPU Rule Adjustment
 
-During Dynatrace validation, I confirmed that the current MVP uses the OpenTelemetry demo’s in-container telemetry pipeline only. Since no Dynatrace OneAgent or OpenTelemetry hostmetrics receiver is installed on the VM, VM-level CPU saturation is not available as a reliable signal yet.
+During Dynatrace validation, I confirmed that the current MVP uses the OpenTelemetry demo's in-container telemetry pipeline only. Since no Dynatrace OneAgent or OpenTelemetry hostmetrics receiver is installed on the VM, VM-level CPU saturation is not available as a reliable signal yet.
 
 Decision:
 
@@ -391,3 +389,87 @@ For this MVP, both Settings API and Monaco confirmed that the new Dynatrace cust
 Created `docs/export-artifacts.md` to document the purpose of each export file and folder.
 
 This was added because the Dynatrace Settings API and Monaco export the same alert rules in different JSON structures. The artifact guide helps distinguish API exports, Monaco config-as-code exports, screenshots, and rule inventory files.
+
+---
+
+## Issue #6 — Instana OTLP Export (Dual-Export)
+
+Status: Planned / In progress
+
+Date: May 25, 2026
+
+### Goal
+
+Configure IBM Instana to receive OTLP telemetry from the OpenTelemetry Collector while keeping Dynatrace export active. This creates a dual-export (fan-out) pipeline.
+
+Target architecture:
+
+```text
+Astronomy Shop services
+  → OpenTelemetry Collector
+    → Dynatrace (existing, unchanged)
+    → Instana (new OTLP export)
+```
+
+### What was done
+
+Prepared the repo-side configuration templates and documentation:
+
+- Created `configs/otel-collector/otelcol-config-extras-instana.yaml` — Instana-only extras template
+- Created `configs/otel-collector/otelcol-config-extras-dual.yaml` — Dual-export (Dynatrace + Instana) extras template
+- Updated `docker-compose/.env.example` with structured Instana placeholder variables
+- Both collector configs use `${env:INSTANA_OTLP_ENDPOINT}` and `${env:INSTANA_AGENT_KEY}` references — no real secrets committed
+- Templates preserve the current local demo exporters instead of replacing them with a simplified backend-only config
+- Dual-export template uses the current naming style: `otlp_http/dynatrace` and `otlp_http/instana`
+
+Preserved local exporters:
+
+- traces: `otlp_grpc/jaeger`, `debug`, `spanmetrics`
+- metrics: `otlp_http/prometheus`, `debug`
+- logs: `opensearch`, `debug`
+
+### VM steps remaining
+
+1. Collect Instana OTLP endpoint and agent key from Instana UI
+2. Add `INSTANA_OTLP_ENDPOINT` and `INSTANA_AGENT_KEY` to VM-side `.env`
+3. Backup current `otelcol-config-extras.yml` on the VM
+4. Replace extras config with dual-export template
+5. Verify `docker-compose.override.yml` has `env_file: .env` for `otel-collector`
+6. Restart collector: `docker compose up -d --force-recreate otel-collector`
+7. Validate Instana receives traces, metrics, and optionally logs
+8. Verify Dynatrace still receives data (dual-export confirmation)
+
+Use `docker inspect` to confirm environment injection instead of `docker compose exec otel-collector env`, because the collector image may not include shell or `env` utilities:
+
+```bash
+docker inspect otel-collector --format '{{range .Config.Env}}{{println .}}{{end}}' | grep -E 'DT_ENDPOINT|INSTANA_OTLP_ENDPOINT|INSTANA_AGENT_KEY'
+```
+
+Do not commit the output if it exposes real endpoints or keys.
+
+### Validation criteria
+
+- Instana UI shows Astronomy Shop services
+- Instana UI shows distributed traces
+- Instana UI shows service-level metrics
+- Dynatrace still receives telemetry after Instana is added
+- Collector logs show both `otlp_http/dynatrace` and `otlp_http/instana` exporters active
+- No `connection refused`, `401 Unauthorized`, or `unset environment variable` errors
+
+### Evidence to capture
+
+- `evidence/instana/services-visible.png`
+- `evidence/instana/traces-flowing.png`
+- `evidence/instana/metrics-visible.png`
+- `evidence/instana/dynatrace-still-active.png`
+- `evidence/instana/logs-attempt.png` (if logs are visible)
+
+Issue #6 must remain `Planned / In progress` until these screenshots are captured and validation confirms Instana services, traces, metrics, and Dynatrace continuity.
+
+### Blockers and notes
+
+(To be filled after VM execution)
+
+### Lessons learned
+
+(To be filled after validation)

@@ -1,0 +1,42 @@
+# otelcol-config-extras-dual.yaml
+# Dual-export: Dynatrace + Instana via OTLP/HTTP
+#
+# This file is an extras overlay for the OpenTelemetry demo collector.
+# It starts from the currently working Dynatrace extras pattern and adds
+# Instana without removing the local demo exporters.
+#
+# Important:
+# Pipeline exporter arrays are replaced during config merge. Re-list the
+# existing demo exporters here so Jaeger, Prometheus, OpenSearch, debug,
+# and spanmetrics keep working.
+#
+# Real values come from the VM-side .env file, never committed to Git.
+#
+# Required VM .env variables:
+#   DT_ENDPOINT=https://<env-id>.live.dynatrace.com/api/v2/otlp
+#   DT_API_TOKEN=<your-dynatrace-api-token>
+#   INSTANA_OTLP_ENDPOINT=https://<instana-otlp-http-endpoint>:4318
+#   INSTANA_AGENT_KEY=<your-agent-key>
+#
+# Note: If your Instana endpoint uses gRPC (port 4317), change
+# "otlp_http/instana" to "otlp/instana" and use the gRPC endpoint.
+
+exporters:
+  otlp_http/dynatrace:
+    endpoint: ${env:DT_ENDPOINT}
+    headers:
+      Authorization: "Api-Token ${env:DT_API_TOKEN}"
+
+  otlp_http/instana:
+    endpoint: ${env:INSTANA_OTLP_ENDPOINT}
+    headers:
+      x-instana-key: ${env:INSTANA_AGENT_KEY}
+
+service:
+  pipelines:
+    traces:
+      exporters: [otlp_grpc/jaeger, debug, spanmetrics, otlp_http/dynatrace, otlp_http/instana]
+    metrics:
+      exporters: [otlp_http/prometheus, debug, otlp_http/dynatrace, otlp_http/instana]
+    logs:
+      exporters: [opensearch, debug, otlp_http/dynatrace, otlp_http/instana]
