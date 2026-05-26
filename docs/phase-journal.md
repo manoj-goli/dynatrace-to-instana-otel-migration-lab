@@ -559,3 +559,41 @@ Evidence captured:
 - `evidence/instana/services-table-visible.png`
 - `evidence/instana/traces-flowing.png`
 - `evidence/instana/dynatrace-still-active.png`
+
+## Issue #7 — Rebuild Dynatrace MVP Rules in Instana
+
+Status: Complete
+
+Date: May 26, 2026
+
+### What was done
+
+Rebuilt the 3 Dynatrace MVP rules in Instana as Global Application Smart Alerts.
+
+Created Instana rules:
+
+1. MVP 1 - Frontend P95 Latency High
+2. MVP 2 - Frontend Failure Rate High
+3. MVP 3 - Frontend Throughput Drop
+
+### Mapping summary
+
+| Dynatrace rule | Instana rule | Signal mapping | Condition |
+|---|---|---|---|
+| MVP - Frontend P95 Latency High | MVP 1 - Frontend P95 Latency High | p95 response time → latency 95th percentile | Latency >= 500 ms |
+| MVP - Frontend Failure Rate High | MVP 2 - Frontend Failure Rate High | failure rate % → error rate | Error rate > 5% |
+| MVP - Frontend Throughput Drop | MVP 3 - Frontend Throughput Drop | request rate → calls | Calls < 0.1 |
+
+### Evidence captured
+
+- `evidence/instana/instana-smart-alerts-list.png`
+- `evidence/instana/rule-01-frontend-p95-latency-high.png`
+- `evidence/instana/rule-02-frontend-failure-rate-high.png`
+- `evidence/instana/rule-03-frontend-throughput-drop.png`
+
+### Lessons learned
+
+- Dynatrace alerts were exportable through API/Monaco, but Instana rules were rebuilt manually through Smart Alerts.
+- Rule migration required mapping by reliability signal, not by direct file import.
+- Latency and error-rate rules mapped cleanly.
+- Throughput-drop rule required checking the actual saved threshold because the Instana list view rounded `0.1` to `0`.

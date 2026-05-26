@@ -47,3 +47,13 @@ For this MVP:
 Migration note:
 
 When migrating Dynatrace rules to Instana, the first step is not just “export alerts.” The first step is to identify which Dynatrace alerting model was used, because each model may be stored under a different API schema.
+
+
+
+## Issue #7 — Instana Rule Mapping
+
+| # | Dynatrace rule | Instana rule | Dynatrace signal | Instana signal | Condition | Status |
+|---|---|---|---|---|---|---|
+| 1 | MVP - Frontend P95 Latency High | MVP 1 - Frontend P95 Latency High | p95 response time | latency 95th percentile | Latency >= 500 ms | Created |
+| 2 | MVP - Frontend Failure Rate High | MVP 2 - Frontend Failure Rate High | failure rate % | error rate | Error rate > 5% | Created |
+| 3 | MVP - Frontend Throughput Drop | MVP 3 - Frontend Throughput Drop | request rate | calls | Calls < 0.1 or lowest supported threshold | Created, threshold verified |
