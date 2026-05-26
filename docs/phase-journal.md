@@ -394,82 +394,168 @@ This was added because the Dynatrace Settings API and Monaco export the same ale
 
 ## Issue #6 — Instana OTLP Export (Dual-Export)
 
-Status: Planned / In progress
+Status: Completed
 
-Date: May 25, 2026
+Date: May 25–26, 2026
 
 ### Goal
 
-Configure IBM Instana to receive OTLP telemetry from the OpenTelemetry Collector while keeping Dynatrace export active. This creates a dual-export (fan-out) pipeline.
+Configure IBM Instana to receive OTLP telemetry from the existing OpenTelemetry Collector while keeping Dynatrace export active.
 
 Target architecture:
 
 ```text
 Astronomy Shop services
   → OpenTelemetry Collector
-    → Dynatrace (existing, unchanged)
-    → Instana (new OTLP export)
-```
+    → Dynatrace
+    → Instana
+````
 
-### What was done
+### Repo preparation completed
 
 Prepared the repo-side configuration templates and documentation:
 
-- Created `configs/otel-collector/otelcol-config-extras-instana.yaml` — Instana-only extras template
-- Created `configs/otel-collector/otelcol-config-extras-dual.yaml` — Dual-export (Dynatrace + Instana) extras template
-- Updated `docker-compose/.env.example` with structured Instana placeholder variables
-- Both collector configs use `${env:INSTANA_OTLP_ENDPOINT}` and `${env:INSTANA_AGENT_KEY}` references — no real secrets committed
-- Templates preserve the current local demo exporters instead of replacing them with a simplified backend-only config
-- Dual-export template uses the current naming style: `otlp_http/dynatrace` and `otlp_http/instana`
+* Created `configs/otel-collector/otelcol-config-extras-instana.yaml`
+* Created `configs/otel-collector/otelcol-config-extras-dual.yaml`
+* Updated `docker-compose/.env.example` with Instana placeholder variables
+* Used `${env:INSTANA_OTLP_ENDPOINT}` and `${env:INSTANA_AGENT_KEY}` references only
+* No real Instana endpoint, key, tenant URL, or token was committed
+* Preserved local demo exporters instead of replacing them with a simplified backend-only config
+* Used the current working exporter naming style:
+
+  * `otlp_http/dynatrace`
+  * `otlp_http/instana`
 
 Preserved local exporters:
 
-- traces: `otlp_grpc/jaeger`, `debug`, `spanmetrics`
-- metrics: `otlp_http/prometheus`, `debug`
-- logs: `opensearch`, `debug`
+* traces: `otlp_grpc/jaeger`, `debug`, `spanmetrics`
+* metrics: `otlp_http/prometheus`, `debug`
+* logs: `opensearch`, `debug`
 
-### VM steps remaining
+### VM execution completed so far
 
-1. Collect Instana OTLP endpoint and agent key from Instana UI
-2. Add `INSTANA_OTLP_ENDPOINT` and `INSTANA_AGENT_KEY` to VM-side `.env`
-3. Backup current `otelcol-config-extras.yml` on the VM
-4. Replace extras config with dual-export template
-5. Verify `docker-compose.override.yml` has `env_file: .env` for `otel-collector`
-6. Restart collector: `docker compose up -d --force-recreate otel-collector`
-7. Validate Instana receives traces, metrics, and optionally logs
-8. Verify Dynatrace still receives data (dual-export confirmation)
+Added Instana OTLP values to the VM-side `.env` file only:
 
-Use `docker inspect` to confirm environment injection instead of `docker compose exec otel-collector env`, because the collector image may not include shell or `env` utilities:
-
-```bash
-docker inspect otel-collector --format '{{range .Config.Env}}{{println .}}{{end}}' | grep -E 'DT_ENDPOINT|INSTANA_OTLP_ENDPOINT|INSTANA_AGENT_KEY'
+```text
+INSTANA_OTLP_ENDPOINT=***SET ON VM ONLY***
+INSTANA_AGENT_KEY=***REDACTED***
 ```
 
-Do not commit the output if it exposes real endpoints or keys.
+Recreated the `otel-collector` container so it could reload `.env`.
 
-### Validation criteria
+Verified that the collector receives the new environment variables using `docker inspect`, instead of `docker compose exec`, because the collector image may not include shell utilities.
 
-- Instana UI shows Astronomy Shop services
-- Instana UI shows distributed traces
-- Instana UI shows service-level metrics
-- Dynatrace still receives telemetry after Instana is added
-- Collector logs show both `otlp_http/dynatrace` and `otlp_http/instana` exporters active
-- No `connection refused`, `401 Unauthorized`, or `unset environment variable` errors
+Configured the existing Astronomy Shop `otel-collector` container for dual export.
+
+Current pipeline:
+
+* traces: local Jaeger/debug/spanmetrics + Dynatrace + Instana
+* metrics: local Prometheus/debug + Dynatrace + Instana
+* logs: local OpenSearch/debug + Dynatrace only
+
+### Blocker encountered
+
+Initial dual-export config sent logs to Instana:
+
+```text
+logs → opensearch + debug + Dynatrace + Instana
+```
+
+Instana returned HTTP 402 for log ingest:
+
+```text
+None of the tenants are permitted to send log data
+```
+
+### Decision
+
+Removed Instana from the logs pipeline only.
+
+Reason:
+
+Logs are best-effort for Issue #6. Traces and metrics are the mandatory success criteria.
+
+Final logs pipeline:
+
+```text
+logs → opensearch + debug + Dynatrace
+```
+
+Instana remains active for:
+
+```text
+traces
+metrics
+```
+
+### Validation completed so far
+
+Collector logs show:
+
+* traces flowing
+* metrics flowing
+* no more Instana HTTP 402 log-ingest errors after removing Instana from the logs pipeline
+* Dynatrace still receives telemetry, with the same known partial metric warnings seen earlier
+
+The remaining Dynatrace partial-success metric warnings are not blocking because they are related to unsupported metric types, not a broken pipeline.
+
+### Validation still remaining
+
+Issue #6 is not complete until the Instana UI confirms:
+
+* Instana shows Astronomy Shop services
+* Instana shows distributed traces
+* Instana shows service-level metrics
+* Dynatrace still receives recent telemetry after Instana was added
 
 ### Evidence to capture
 
-- `evidence/instana/services-visible.png`
-- `evidence/instana/traces-flowing.png`
-- `evidence/instana/metrics-visible.png`
-- `evidence/instana/dynatrace-still-active.png`
-- `evidence/instana/logs-attempt.png` (if logs are visible)
+Save screenshots under:
 
-Issue #6 must remain `Planned / In progress` until these screenshots are captured and validation confirms Instana services, traces, metrics, and Dynatrace continuity.
+```text
+evidence/instana/
+```
 
-### Blockers and notes
+Expected files:
 
-(To be filled after VM execution)
+* `services-visible.png`
+* `traces-flowing.png`
+* `metrics-visible.png`
+* `dynatrace-still-active.png`
+* `logs-attempt.png` if useful, showing that logs were attempted but blocked by tenant permissions
 
 ### Lessons learned
 
-(To be filled after validation)
+* Reusing the existing Astronomy Shop OpenTelemetry Collector is cleaner than installing a second collector.
+* Dual export is a collector fan-out pattern: one telemetry source can send to multiple backends.
+* Adding values to `.env` does not update a running container; the collector must be recreated.
+* `docker inspect` is safer than `docker compose exec` for minimal collector images.
+* Not every telemetry signal is supported or enabled in every SaaS trial. In this case, Instana log ingest returned HTTP 402, so logs were documented as best-effort.
+* When one signal fails, remove only the failing exporter path instead of disabling the whole backend integration.
+
+### Next step
+
+Check the Instana UI for services, traces, and metrics.
+
+### Final validation
+
+Issue #6 validation completed successfully.
+
+Confirmed:
+
+- Instana shows Astronomy Shop services.
+- Instana shows service-level metrics including calls, erroneous call rate, and latency.
+- Instana shows distributed traces with span timelines.
+- Dynatrace still receives recent distributed traces after Instana was added.
+- Instana log export was attempted but returned HTTP 402 because the tenant is not permitted to send log data.
+
+Decision:
+
+Instana logs are documented as best-effort and not a blocker for the MVP. Traces and metrics are the required success criteria for Issue #6.
+
+Evidence captured:
+
+- `evidence/instana/services-summary-visible.png`
+- `evidence/instana/services-table-visible.png`
+- `evidence/instana/traces-flowing.png`
+- `evidence/instana/dynatrace-still-active.png`
