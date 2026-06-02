@@ -304,23 +304,24 @@ This is a very realistic DevOps/SRE issue because many production telemetry fail
 | #3 | Astronomy Shop running | Complete |
 | #4 | Dynatrace OTLP export | Complete |
 | #5 | Create 3 Dynatrace rules and export | Complete |
-| #6 | Configure Instana OTLP export (dual-export) | Planned / In progress |
-| #7 | Map and rebuild 3 rules in Instana | Not started |
-| #8 | Validate with one failure scenario | Not started |
+| #6 | Configure Instana OTLP export (dual-export) | Complete |
+| #7 | Map and rebuild 3 rules in Instana | Complete |
+| #8 | Validate with one failure scenario | In progress |
 
 ---
 
 ## Next Step
 
-Proceed with Issue #6 validation.
+Proceed with Issue #8 validation.
 
-Issue #7 must not start until Issue #6 is validated:
+Issue #8 is currently validating the throughput-drop scenario by stopping the `load-generator` service on the VM. Do not mark Issue #8 complete until screenshots confirm the throughput drop or alert behavior in both platforms.
 
-- Instana services are visible.
-- Instana traces are visible.
-- Instana metrics are visible.
-- Dynatrace still receives telemetry.
-- `evidence/instana/` screenshots are captured.
+Expected evidence:
+
+- `evidence/validation/baseline-instana-throughput.png`
+- `evidence/validation/baseline-dynatrace-throughput.png`
+- `evidence/validation/instana-throughput-drop-triggered.png`
+- `evidence/validation/dynatrace-throughput-drop-triggered.png`
 
 ---
 
@@ -582,7 +583,7 @@ Created Instana rules:
 |---|---|---|---|
 | MVP - Frontend P95 Latency High | MVP 1 - Frontend P95 Latency High | p95 response time → latency 95th percentile | Latency >= 500 ms |
 | MVP - Frontend Failure Rate High | MVP 2 - Frontend Failure Rate High | failure rate % → error rate | Error rate > 5% |
-| MVP - Frontend Throughput Drop | MVP 3 - Frontend Throughput Drop | request rate → calls | Calls < 0.1 |
+| MVP - Frontend Throughput Drop | MVP 3 - Frontend Throughput Drop | request rate → calls | Calls < 1 |
 
 ### Evidence captured
 
@@ -596,4 +597,96 @@ Created Instana rules:
 - Dynatrace alerts were exportable through API/Monaco, but Instana rules were rebuilt manually through Smart Alerts.
 - Rule migration required mapping by reliability signal, not by direct file import.
 - Latency and error-rate rules mapped cleanly.
-- Throughput-drop rule required checking the actual saved threshold because the Instana list view rounded `0.1` to `0`.
+- Throughput-drop rule required checking the actual saved threshold because the Instana list view may round or simplify small displayed values.
+
+---
+
+## New Dynatrace Tenant Rehydration
+
+Status: Complete
+
+The original Dynatrace trial expired before Issue #8 validation was finished. A new Dynatrace tenant was created and the VM-side Dynatrace ingest settings were updated.
+
+What was done:
+
+- Updated the VM-side `DT_ENDPOINT` and `DT_API_TOKEN` values.
+- Recreated the collector so it loaded the new Dynatrace ingest settings.
+- Confirmed telemetry reached the new Dynatrace tenant.
+- Manually recreated the 3 Dynatrace MVP rules in the new tenant.
+
+No real tenant URLs, tokens, or secrets are stored in the repo.
+
+### Monaco dry-run vs real deploy finding
+
+The existing Monaco export was updated to point at the new Dynatrace tenant.
+
+Result:
+
+- `monaco deploy --dry-run manifest.yaml` passed.
+- Real `monaco deploy manifest.yaml` failed for `builtin:davis.anomaly-detectors`.
+- The failure message included: `Could not do validation as request was not done using oAuth.`
+
+Decision:
+
+This is not a blocker for the MVP because the 3 rules were manually recreated in the new Dynatrace tenant.
+
+Lesson:
+
+Exportability does not always equal redeployability. The Monaco export remains useful as a source/config artifact, but some Davis anomaly detector deploy paths may require OAuth-backed validation.
+
+---
+
+## Issue #8 - Throughput-Drop Failure Validation
+
+Status: In progress
+
+Goal:
+
+Validate one failure scenario by stopping the Astronomy Shop `load-generator` and confirming the throughput/calls drop is visible in Dynatrace and Instana.
+
+### Issue #8 Validation Result - Throughput Drop
+
+Validated the throughput-drop failure scenario by stopping the `load-generator` container.
+
+Observed result:
+
+- Throughput-drop behavior was visible in both tools.
+- Instana generated an active Smart Alert for the throughput-drop scenario in the first validation run.
+- In repeated short start/stop tests, Instana showed the Calls graph dropping but did not create additional Smart Alerts.
+- Dynatrace showed the frontend request throughput drop in the DQL preview.
+- Dynatrace successfully simulated the equivalent throughput-drop alert after the threshold was recalibrated from an exact low threshold to match Dynatrace's request-rate scale.
+- Repeated tests showed platform-specific differences in alert timing, deduplication, persistence, and no-data handling.
+
+Final validated rule behavior:
+
+| Platform | Rule | Signal | Condition | Result |
+|---|---|---|---|---|
+| Instana | MVP 3 - Frontend Throughput Drop | Calls | Calls < 1 | Active Smart Alert created in initial run; repeated short start/stop tests showed graph drops but no additional alert |
+| Dynatrace | MVP 3 - Frontend Throughput Drop | `request_rate` from `dt.service.request.count` | request_rate < 300 | Simulated alert generated |
+
+Dynatrace DQL used:
+
+```dql
+timeseries request_rate = sum(dt.service.request.count, rate: 1m),
+  by: {dt.smartscape.service},
+  interval: 1m
+| fieldsAdd service_name = getNodeName(dt.smartscape.service)
+| filter service_name == "frontend"
+```
+
+Key migration lesson:
+
+The same alert intent did not use the same numeric threshold across platforms. Instana and Dynatrace exposed similar throughput behavior using different metric semantics and alert evaluation models. Therefore, alert migration required threshold recalibration and validation of platform-specific alert behavior instead of a direct one-to-one copy.
+
+Evidence captured:
+
+- `evidence/validation/instana-throughput-drop-triggered.png`
+- `evidence/validation/instana-throughput-drop-no-repeat-alert.png`
+- `evidence/validation/dynatrace-throughput-drop-simulated.png`
+- `evidence/validation/dynatrace-throughput-drop-simulated-retested.png`
+- `evidence/validation/baseline-instana-throughput.png`
+- `evidence/validation/baseline-dynatrace-throughput.png`
+
+Status:
+
+Issue #8 is complete after evidence is saved and the `load-generator` is restarted.

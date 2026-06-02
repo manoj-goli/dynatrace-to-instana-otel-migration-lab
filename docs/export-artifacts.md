@@ -62,7 +62,8 @@ builtin:davis.anomaly-detectors
 | Export method | Location | Format | Best use |
 |---|---|---|---|
 | Settings API | `configs/dynatrace/api-exports/` | Raw JSON response | Easy to inspect with `jq`, useful for API automation |
-| Monaco | `configs/dynatrace/exported/monaco/` | Config-as-code structure | Useful for backup, redeployment, templating, and config-as-code workflows |
+| Monaco | `configs/dynatrace/exported/monaco/` | Config-as-code structure | Useful as a source/config artifact for backup, review, templating, and redeploy investigation |
+| Manual recreation | Dynatrace and Instana UIs | Human-driven rebuild | MVP fallback when automated redeploy is blocked or not worth automating for a small rule set |
 
 Important difference:
 
@@ -84,6 +85,18 @@ Monaco export structure:
 ```
 
 This means a parser written for the API export will not work directly against Monaco files without transformation logic.
+
+### Monaco redeploy finding
+
+The Monaco export remains useful as a source/config artifact, but exportability does not always equal redeployability.
+
+After the original Dynatrace trial expired, the Monaco export was updated to point to the new Dynatrace tenant. `monaco deploy --dry-run manifest.yaml` passed, but the real `monaco deploy manifest.yaml` failed for `builtin:davis.anomaly-detectors` with an OAuth validation requirement:
+
+```text
+Could not do validation as request was not done using oAuth.
+```
+
+This is not a blocker for the MVP because the 3 Dynatrace rules were manually recreated in the new tenant. For this MVP, API export is the reference/backup artifact, Monaco is the config-as-code artifact, and manual recreation is the fallback path.
 
 ---
 
@@ -142,11 +155,10 @@ Location:
 
 | File | What it shows | Why it matters |
 |---|---|---|
-| `services-visible.png` | Astronomy Shop services visible in Instana | Proves OTLP telemetry reached Instana |
+| `services-summary-visible.png` | Astronomy Shop service summary visible in Instana | Proves OTLP telemetry reached Instana |
+| `services-table-visible.png` | Astronomy Shop service table visible in Instana | Proves service-level visibility in Instana |
 | `traces-flowing.png` | Distributed traces visible in Instana | Proves trace ingest works via dual-export |
-| `metrics-visible.png` | Service metrics visible in Instana | Proves metric ingest works |
+| Service metrics visible in `services-summary-visible.png` and `services-table-visible.png` | Service calls, erroneous call rate, and latency visible in Instana | Proves metric ingest works |
 | `dynatrace-still-active.png` | Dynatrace still receiving telemetry after Instana is added | Proves dual-export did not regress the existing backend |
-| `collector-dual-export-logs.png` | Collector restart/log evidence with both exporters configured | Helps validate the dual-export collector startup |
-| `logs-attempt.png` | Logs view in Instana (if visible) | Best-effort log evidence |
 
-Note: These screenshots will be added after Issue #6 VM validation is complete.
+Issue #6 evidence has been captured. Instana logs were attempted but not required for MVP success because the tenant returned HTTP 402 for log ingest.

@@ -56,4 +56,18 @@ When migrating Dynatrace rules to Instana, the first step is not just “export 
 |---|---|---|---|---|---|---|
 | 1 | MVP - Frontend P95 Latency High | MVP 1 - Frontend P95 Latency High | p95 response time | latency 95th percentile | Latency >= 500 ms | Created |
 | 2 | MVP - Frontend Failure Rate High | MVP 2 - Frontend Failure Rate High | failure rate % | error rate | Error rate > 5% | Created |
-| 3 | MVP - Frontend Throughput Drop | MVP 3 - Frontend Throughput Drop | request rate | calls | Calls < 0.1 or lowest supported threshold | Created, threshold verified |
+| 3 | MVP - Frontend Throughput Drop | MVP 3 - Frontend Throughput Drop | request rate | calls | Calls < 1 | Created, threshold verified |
+
+Note:
+
+The Instana list view may round or simplify small numeric values. For throughput-drop rules, verify the actual saved threshold in the rule details rather than relying only on the list view display.
+
+## Issue #8 - Rule 3 Throughput-Drop Validation
+
+| Dynatrace rule | Dynatrace signal | Dynatrace condition | Instana rule | Instana signal | Instana condition | Status |
+|---|---|---|---|---|---|---|
+| MVP 3 - Frontend Throughput Drop | `request_rate` from `dt.service.request.count` | `request_rate < 300` | MVP 3 - Frontend Throughput Drop | Calls | Calls < 1 | Validated with threshold recalibration and platform behavior difference documented |
+
+The throughput-drop alert did not use the same numeric threshold in Dynatrace and Instana. Dynatrace used `request_rate < 300` because its DQL query returned frontend request-rate values in the hundreds during normal load. Instana used `Calls < 1` because its Smart Alert metric represented the drop on a different scale. The migration preserved the alert intent, not the exact threshold value.
+
+Instana triggered during the initial validation run, but repeated short start/stop tests did not always create new alerts even when the Calls graph dropped. This may be due to persistence, deduplication, cool-down, or no-data behavior. Dynatrace simulated the scenario after recalibrating the threshold to match its request-rate scale.

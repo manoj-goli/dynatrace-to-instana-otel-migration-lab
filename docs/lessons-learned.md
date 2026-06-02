@@ -415,3 +415,118 @@ Do not rely on docker compose exec otel-collector env because the
 collector image may not include shell or env utilities.
 Do not commit command output if it exposes real endpoints or keys.
 ```
+
+---
+
+## 19. Trial expiry and tenant rehydration
+
+```text
+SaaS observability trials can expire before a lab is finished.
+When that happens, the project needs tenant rehydration before validation can continue.
+```
+
+In this MVP, the original Dynatrace trial expired before Issue #8 was complete.
+
+Rehydration meant:
+
+```text
+1. Create a new Dynatrace tenant.
+2. Update VM-side Dynatrace ingest settings only.
+3. Recreate the collector so it loads the new ingest token and endpoint.
+4. Confirm telemetry reaches the new tenant.
+5. Recreate the 3 MVP Dynatrace rules.
+```
+
+Learning:
+
+```text
+Do not store the new endpoint, ingest token, or config token in the repo.
+Document the process and evidence, not the secrets.
+```
+
+---
+
+## 20. Dynatrace ingest token vs Monaco config token
+
+```text
+Dynatrace ingest and Dynatrace configuration automation use different token purposes.
+```
+
+For this lab:
+
+```text
+DT_API_TOKEN / ingest token:
+  Used by the OpenTelemetry Collector to send telemetry.
+
+Dynatrace config token:
+  Used by API or Monaco workflows to read or manage settings.
+```
+
+Learning:
+
+```text
+A working telemetry ingest token does not imply Monaco or Settings API access.
+Keep the token purpose clear when troubleshooting.
+```
+
+---
+
+## 21. Monaco dry-run does not guarantee live deploy
+
+```text
+monaco deploy --dry-run validates structure and planned changes.
+It does not guarantee the real deploy path will be accepted by the tenant.
+```
+
+In this MVP:
+
+```text
+monaco deploy --dry-run manifest.yaml
+  passed
+
+monaco deploy manifest.yaml
+  failed for builtin:davis.anomaly-detectors
+```
+
+The failure included:
+
+```text
+Could not do validation as request was not done using oAuth.
+```
+
+Learning:
+
+```text
+Exportability does not always equal redeployability.
+Some Dynatrace Davis anomaly detector deploy paths may require OAuth validation.
+```
+
+---
+
+## 22. Manual rebuild can be the right MVP fallback
+
+```text
+For a small MVP rule set, manual rebuild is acceptable when automation is blocked.
+```
+
+In this lab, the 3 Dynatrace rules were manually recreated in the new tenant after Monaco real deploy failed.
+
+Learning:
+
+```text
+Do not let config-as-code tooling block the MVP when the rule set is small,
+the mapping is understood, and screenshots can prove the rebuilt rules.
+Document the automation limitation and continue with validated manual recreation.
+```
+
+---
+
+## 23. Alert parity requires threshold and behavior validation
+
+Alert migration is not just copying thresholds.
+
+Instana used `Calls < 1`, while Dynatrace required `request_rate < 300` for the equivalent frontend throughput-drop behavior. The intent was the same, but each platform represented throughput using a different scale and alert evaluation model.
+
+Repeated tests showed alert creation behavior can differ because tools may evaluate persistence, missing data, repeated violations, and deduplication differently.
+
+Final migration validation should compare user-facing alert intent and operational outcome, not just metric names and threshold values.

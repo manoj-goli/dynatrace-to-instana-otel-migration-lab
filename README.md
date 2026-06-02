@@ -16,7 +16,7 @@ This project is intentionally staged so infrastructure, platform setup, and auto
 
 ## Work In Progress
 
-This repository is in early MVP scaffolding. Do not use it as a production migration template yet.
+This repository is an MVP migration lab in progress. Issues #1-#7 are complete, and Issue #8 is validating the throughput-drop failure scenario. Do not use it as a production migration template yet.
 
 ## High-Level Architecture
 

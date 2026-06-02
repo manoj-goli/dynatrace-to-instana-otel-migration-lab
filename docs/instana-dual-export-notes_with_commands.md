@@ -157,13 +157,16 @@ logs:
 
 ## Current Status
 
-Ready to validate in Instana UI:
+Issue #6 validation is complete:
 
 * Services visible
 * Traces visible
 * Metrics visible
+* Dynatrace continuity confirmed
 
 Logs are documented as unsupported/blocked by tenant permissions.
+
+Current validation has moved to Issue #8, the throughput-drop failure scenario using the stopped `load-generator`.
 
 ````
 
