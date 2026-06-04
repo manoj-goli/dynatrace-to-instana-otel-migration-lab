@@ -530,3 +530,48 @@ Instana used `Calls < 1`, while Dynatrace required `request_rate < 300` for the 
 Repeated tests showed alert creation behavior can differ because tools may evaluate persistence, missing data, repeated violations, and deduplication differently.
 
 Final migration validation should compare user-facing alert intent and operational outcome, not just metric names and threshold values.
+
+---
+
+## 24. Manual rebuild is useful for discovery but not scalable
+
+Manually rebuilding 3 Instana Smart Alerts was acceptable for the MVP because it exposed the real mapping decisions:
+
+```text
+latency -> slowness
+failure rate -> erroneous calls
+throughput drop -> calls / throughput
+```
+
+That approach does not scale to 100+ rules.
+
+Learning:
+
+```text
+Use manual rebuild to learn the mapping model.
+Use automation to produce reviewable migration outputs once the pattern is understood.
+```
+
+---
+
+## 25. Exported rules need translation, not direct import
+
+Dynatrace API and Monaco exports are useful source artifacts, but they are not directly importable Instana configs.
+
+The migration workflow needs to:
+
+```text
+parse exports
+normalize rule data
+classify alert intent
+map to Instana candidates
+flag confidence and review needs
+generate reviewable outputs
+```
+
+Learning:
+
+```text
+There is no simple "Dynatrace export -> Instana import" path for these rules.
+The useful automation target is a semi-automated translation workflow.
+```

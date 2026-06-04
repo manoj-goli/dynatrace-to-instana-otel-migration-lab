@@ -37,17 +37,56 @@ Issue #6 was marked complete after:
 - Dynatrace still receives telemetry.
 - `evidence/instana/` screenshots are captured.
 
-## Current Issue #8 Validation Scope
+## Issue #8 Validation Scope
 
-Status: In progress
+Status: Validation complete / evidence cleanup pending
 
-The current MVP focus is the throughput-drop failure scenario by stopping the Astronomy Shop `load-generator`.
+Issue #8 validated the throughput-drop failure scenario by stopping the Astronomy Shop `load-generator`.
 
-Do not mark Issue #8 complete until screenshots confirm the throughput drop or alert behavior.
+Evidence filenames differ from the original expected list, so final cleanup should reconcile the documented evidence list with the files saved under `evidence/validation/`.
 
-Expected evidence:
+Saved evidence includes:
 
 - `evidence/validation/baseline-instana-throughput.png`
 - `evidence/validation/baseline-dynatrace-throughput.png`
-- `evidence/validation/instana-throughput-drop-triggered.png`
-- `evidence/validation/dynatrace-throughput-drop-triggered.png`
+- `evidence/validation/instana-throughput-drop-no-repeat-alert.png`
+- `evidence/validation/dynatrace-throughput-drop-simulated.png`
+
+## Issue #9 Scope: Semi-Automated Rule Migration Tool
+
+Status: Phase 1 active
+
+Issue #9 is part of active project scope, not a future backlog item.
+
+The goal is to create a semi-automated workflow that takes Dynatrace alert exports, normalizes and classifies them, maps them to Instana Smart Alert candidates, and generates reviewable outputs before any API creation is attempted.
+
+Target workflow:
+
+```text
+Dynatrace API / Monaco export
+  -> parse
+  -> normalize
+  -> classify
+  -> map
+  -> generate review outputs
+  -> human review
+  -> optional API/Terraform creation later
+```
+
+v1 is generate-only and makes no live Dynatrace or Instana API calls.
+
+Manual Instana alert rebuilding is useful for discovery, but it does not scale to 100+ rules. Exported Dynatrace rules are source artifacts, not directly importable Instana configs.
+
+Phase boundaries:
+
+- Phase 1: Planning and scaffold only.
+- Phase 2: Dynatrace parser and normalizer.
+- Phase 3: Classifier, Instana candidate mapper, and review outputs.
+- Phase 4: Instana API/Terraform creation, only after tenant validation.
+
+Phase 4 requires validation of Instana API payloads, Application Perspective IDs, alert channel IDs, and tenant-specific behavior before any live creation.
+
+Output locations:
+
+- `rule-migration-tool/outputs/`: local/generated working outputs from the tool.
+- `rule-inventory/generated/`: curated/reviewed migration outputs that may be committed later.

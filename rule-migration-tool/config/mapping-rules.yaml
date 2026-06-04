@@ -1,0 +1,45 @@
+# Seed mapping configuration for Issue #9.
+# This file documents mapping intent only; Phase 1 does not implement mapping logic.
+
+confidence_levels:
+  high:
+    description: Clear static-threshold rule with direct Instana Smart Alert equivalent.
+    action: Generate candidate mapping and require human threshold review.
+  medium:
+    description: Similar alert intent, but unit conversion, scale differences, or scope differences are likely.
+    action: Generate candidate mapping with review required.
+  low:
+    description: Unsupported, complex, or unclear mapping.
+    action: Flag for manual review and do not auto-map.
+
+seed_rules:
+  - dynatrace_rule: MVP - Frontend P95 Latency High
+    dynatrace_signal: percentile(dt.service.request.response_time, 95)
+    dynatrace_threshold: 500000 microseconds
+    dynatrace_condition: ABOVE
+    instana_candidate: Slowness Smart Alert
+    instana_signal: latency 95th percentile
+    instana_threshold: 500 ms
+    confidence: high
+    review_required: true
+
+  - dynatrace_rule: MVP - Frontend Failure Rate High
+    dynatrace_signal: 100 * failures / total
+    dynatrace_threshold: 5 percent
+    dynatrace_condition: ABOVE
+    instana_candidate: Erroneous Calls Smart Alert
+    instana_signal: error rate
+    instana_threshold: 5 percent
+    confidence: high
+    review_required: true
+
+  - dynatrace_rule: MVP - Frontend Throughput Drop
+    dynatrace_signal: sum(dt.service.request.count, rate: 1m)
+    dynatrace_threshold: request_rate < 300
+    dynatrace_condition: BELOW
+    instana_candidate: Throughput Smart Alert
+    instana_signal: calls
+    instana_threshold: Calls < 1
+    confidence: medium
+    review_required: true
+    notes: Threshold recalibration was required during Issue #8 validation.

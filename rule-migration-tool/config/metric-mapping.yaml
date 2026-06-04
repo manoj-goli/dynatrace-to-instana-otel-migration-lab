@@ -1,0 +1,21 @@
+# Seed metric mapping notes for Issue #9.
+# These are planning-time mappings, not executable conversion rules.
+
+metrics:
+  - dynatrace_metric: dt.service.request.response_time
+    dynatrace_usage: P95 latency custom alert
+    instana_signal: latency 95th percentile
+    conversion: microseconds_to_milliseconds
+    confidence: high
+
+  - dynatrace_metric: dt.service.request.failure_count / dt.service.request.count
+    dynatrace_usage: Failure-rate percentage custom alert
+    instana_signal: erroneous calls / error rate
+    conversion: percentage
+    confidence: high
+
+  - dynatrace_metric: dt.service.request.count
+    dynatrace_usage: Throughput-drop request-rate custom alert
+    instana_signal: calls / throughput
+    conversion: platform_specific_threshold_review_required
+    confidence: medium

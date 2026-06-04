@@ -1,0 +1,4 @@
+# Optional service-name translation overrides.
+# Leave empty until Phase 2/3 identifies names that differ between exports and Instana.
+
+overrides: []

@@ -306,22 +306,16 @@ This is a very realistic DevOps/SRE issue because many production telemetry fail
 | #5 | Create 3 Dynatrace rules and export | Complete |
 | #6 | Configure Instana OTLP export (dual-export) | Complete |
 | #7 | Map and rebuild 3 rules in Instana | Complete |
-| #8 | Validate with one failure scenario | In progress |
+| #8 | Validate with one failure scenario | Validation complete / evidence cleanup pending |
+| #9 | Semi-automated rule migration tool | Phase 1 active |
 
 ---
 
 ## Next Step
 
-Proceed with Issue #8 validation.
+Proceed with Issue #9 Phase 1 planning and scaffold.
 
-Issue #8 is currently validating the throughput-drop scenario by stopping the `load-generator` service on the VM. Do not mark Issue #8 complete until screenshots confirm the throughput drop or alert behavior in both platforms.
-
-Expected evidence:
-
-- `evidence/validation/baseline-instana-throughput.png`
-- `evidence/validation/baseline-dynatrace-throughput.png`
-- `evidence/validation/instana-throughput-drop-triggered.png`
-- `evidence/validation/dynatrace-throughput-drop-triggered.png`
+Issue #9 creates the safe structure and documentation for a semi-automated Dynatrace to Instana rule migration workflow. Phase 1 does not implement parser, mapper, API client, Terraform, or alert creation logic.
 
 ---
 
@@ -638,7 +632,7 @@ Exportability does not always equal redeployability. The Monaco export remains u
 
 ## Issue #8 - Throughput-Drop Failure Validation
 
-Status: In progress
+Status: Validation complete / evidence cleanup pending
 
 Goal:
 
@@ -687,6 +681,60 @@ Evidence captured:
 - `evidence/validation/baseline-instana-throughput.png`
 - `evidence/validation/baseline-dynatrace-throughput.png`
 
-Status:
+Status note:
 
-Issue #8 is complete after evidence is saved and the `load-generator` is restarted.
+Issue #8 validation is complete based on the documented platform behavior and saved evidence. Evidence cleanup remains because some saved filenames differ from earlier expected names.
+
+---
+
+## Issue #9 - Semi-Automated Dynatrace to Instana Rule Migration Tool
+
+Status: Phase 1 active
+
+Goal:
+
+Create a semi-automated workflow that takes Dynatrace alert exports, normalizes and classifies them, maps them to Instana Smart Alert candidates, and generates reviewable outputs before any API creation is attempted.
+
+Why this was added:
+
+Manual Instana alert rebuilding worked for the 3-rule MVP, but it does not scale to 100+ rules. The Issue #7 and Issue #8 work showed that migration needs translation by alert intent, not direct file import or blind threshold copying.
+
+Target workflow:
+
+```text
+Dynatrace API / Monaco export
+  -> parse
+  -> normalize
+  -> classify
+  -> map
+  -> generate review outputs
+  -> human review
+  -> optional API/Terraform creation later
+```
+
+Phase boundaries:
+
+- Phase 1: Planning and scaffold only.
+- Phase 2: Dynatrace parser and normalizer.
+- Phase 3: Classifier, Instana candidate mapper, and review outputs.
+- Phase 4: Instana API/Terraform creation, only after validation.
+
+v1 rule:
+
+Generate review outputs only. Do not call Dynatrace APIs, call Instana APIs, create alerts, edit secrets, or run live platform commands.
+
+Mapping seed examples:
+
+| Dynatrace rule | Instana candidate | Confidence | Review reason |
+|---|---|---|---|
+| MVP - Frontend P95 Latency High | Slowness Smart Alert | High | Unit conversion from microseconds to milliseconds |
+| MVP - Frontend Failure Rate High | Erroneous Calls Smart Alert | High | Direct percentage mapping |
+| MVP - Frontend Throughput Drop | Throughput Smart Alert | Medium | Threshold recalibration and platform-specific metric semantics |
+
+Risks:
+
+- Thresholds may need recalibration per platform.
+- Metric semantics may differ even when alert intent is the same.
+- Missing-data behavior, repeated alert behavior, persistence, and deduplication can differ by platform.
+- Davis AI, SLO, log-based, baseline, or complex DQL alerts may be unsupported in v1.
+- Phase 4 requires validation of Instana payloads, Application Perspective IDs, and alert channel IDs.

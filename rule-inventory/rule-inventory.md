@@ -71,3 +71,51 @@ The Instana list view may round or simplify small numeric values. For throughput
 The throughput-drop alert did not use the same numeric threshold in Dynatrace and Instana. Dynatrace used `request_rate < 300` because its DQL query returned frontend request-rate values in the hundreds during normal load. Instana used `Calls < 1` because its Smart Alert metric represented the drop on a different scale. The migration preserved the alert intent, not the exact threshold value.
 
 Instana triggered during the initial validation run, but repeated short start/stop tests did not always create new alerts even when the Calls graph dropped. This may be due to persistence, deduplication, cool-down, or no-data behavior. Dynatrace simulated the scenario after recalibrating the threshold to match its request-rate scale.
+
+## Issue #9 - Automation Readiness
+
+The 3 MVP rules are now seed examples for the semi-automated Dynatrace to Instana rule migration tool.
+
+Manual rebuild was valuable for discovery, but it does not scale to 100+ rules. The migration tool should generate reviewable outputs first and require human review before any live creation is considered.
+
+Target workflow:
+
+```text
+Dynatrace API / Monaco export
+  -> parse
+  -> normalize
+  -> classify
+  -> map
+  -> generate review outputs
+  -> human review
+  -> optional API/Terraform creation later
+```
+
+Output locations:
+
+- `rule-migration-tool/outputs/`: local/generated working outputs from the tool.
+- `rule-inventory/generated/`: curated/reviewed migration outputs that may be committed later.
+
+### Seed Mapping Examples
+
+| Dynatrace rule | Instana candidate | Confidence | Review notes |
+|---|---|---|---|
+| MVP - Frontend P95 Latency High | Slowness Smart Alert | High | Unit conversion from 500000 microseconds to 500 ms. |
+| MVP - Frontend Failure Rate High | Erroneous Calls Smart Alert | High | Direct percentage mapping. |
+| MVP - Frontend Throughput Drop | Throughput Smart Alert | Medium | Threshold recalibration required; Instana used `Calls < 1`, while Dynatrace used `request_rate < 300`. |
+
+### Confidence Levels
+
+| Level | Meaning | Action |
+|---|---|---|
+| High | Clear static-threshold latency or error-rate rule with a direct Instana Smart Alert equivalent. | Generate candidate and require threshold review. |
+| Medium | Similar intent, but unit conversion, threshold recalibration, scope difference, or platform-specific metric semantics are likely. | Generate candidate with review required. |
+| Low | Unsupported, complex, or unclear mapping such as Davis AI, SLO, log-based, baseline, or arbitrary DQL alerts. | Flag for manual review and do not auto-map. |
+
+### Known Migration Risks
+
+- Threshold recalibration can be platform-specific.
+- Similar alert intent may use different metric scales.
+- Missing-data behavior can differ by platform.
+- Repeated alert behavior, persistence, cool-downs, and deduplication can differ by platform.
+- Exported Dynatrace rules are source artifacts, not directly importable Instana configs.
